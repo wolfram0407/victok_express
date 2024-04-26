@@ -6,7 +6,7 @@ import Cron from "croner";
 import { config } from "./config/config.js";
 
 import userRouter from "./src/router/user.js";
-import lockerRouter from "./src/router/locker.js";
+import lockerRouter from "./src/router/lockerType.js";
 const TIME_ZONE = "Asia/Seoul";
 const options = {
   timezone: TIME_ZONE,
