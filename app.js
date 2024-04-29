@@ -7,6 +7,7 @@ import { config } from "./config/config.js";
 
 import userRouter from "./src/router/user.js";
 import lockerRouter from "./src/router/lockerType.js";
+import customerRouter from "./src/router/customer.js";
 const TIME_ZONE = "Asia/Seoul";
 const options = {
   timezone: TIME_ZONE,
@@ -21,6 +22,7 @@ app.use(helmet());
 
 app.use("/api/user", userRouter);
 app.use("/api/locker", lockerRouter);
+app.use("/api/customer", customerRouter);
 
 app.listen(config.host.port, () => {
   console.log("Connected 4000 port.");
