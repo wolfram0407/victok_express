@@ -92,6 +92,31 @@ router.post(
   }
 );
 
+// 나중에 날짜로 출력 할지 어떤 방식으로 출력할지 결정되면 진행
+router.get("/info/", isAuth, async (req, res, next) => {
+  try {
+    const list = await db.query(`SELECT * FROM lockers WHERE user_id = ? AND deleted_at IS NULL `, [req.authorizedUser]).then((r) => r[0]);
+
+    return res.status(200).json({
+      message: "success",
+      data: { list },
+    });
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+// 나중에 날짜로 출력 할지 어떤 방식으로 출력할지 결정되면 진행
+router.get("/info/locker-type/:typeId", isAuth, async (req, res, next) => {
+  try {
+    return res.status(200).json({
+      message: "success",
+      data: {},
+    });
+  } catch (e) {
+    console.log(e);
+  }
+});
 const convertDate = (input) => {
   // 문자열을 파싱하여 연도, 월, 일로 나누기
   const year = input.substring(0, 4); // "24" -> "2024"
