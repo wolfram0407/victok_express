@@ -219,8 +219,43 @@ router.put(
   }
 );
 // 락카 수납 수정
+/*
+1. 로그인된 상태 에서 해당 idx 검증 
+2. 락카 idx를 받아서 해당 값을 조회
+3. 락카 수납 정보 확인해서 다르면 변경
+*/
+router.put(
+  "/paid",
+  isAuth,
+  [
+    body("lockerIdx").trim().notEmpty().withMessage("라커 idx를 입력해 주세요."),
+    body("paid").trim().notEmpty().withMessage("수납 여부를 입력해 주세요."),
+    validate,
+  ],
+  async (req, res, next) => {
+    const { lockerIdx, paid } = req.body;
+    const lockerInfo = await db
+      .execute(`SELECT * FROM lockers WHERE locker_id=? &&deleted_at IS NULL`, [lockerIdx])
+      .then((result) => result[0][0]);
+
+    if (lockerInfo.paid !== Number(paid)) {
+      await db.execute(`UPDATE lockers SET paid= ? WHERE locker_id = ?;`, [paid, lockerIdx]);
+      lockerInfo.paid = paid;
+    }
+
+    return res.status(200).json({
+      message: "success",
+      data: { lockerInfo },
+    });
+  }
+);
 
 // 락카 삭제
+/*
+1. 로그인된 상태 에서 해당 idx 검증 
+2. 락카 idx를 받아서 해당 값을 조회
+3. 락카 수납 정보 확인해서 다르면 변경
+*/
 
 // 라커 수리중 설정
 
