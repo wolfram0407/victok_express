@@ -9,6 +9,9 @@ import userRouter from "./src/router/user.js";
 import lockerTypeRouter from "./src/router/lockerType.js";
 import lockerRouter from "./src/router/locker.js";
 import customerRouter from "./src/router/customer.js";
+import settingRouter from "./src/router/setting.js";
+
+import adminCustomerRouter from "./src/router/admin/customer.js";
 
 const TIME_ZONE = "Asia/Seoul";
 const options = {
@@ -25,7 +28,9 @@ app.use(helmet());
 app.use("/api/user", userRouter);
 app.use("/api/locker", [lockerRouter, lockerTypeRouter]);
 app.use("/api/customer", customerRouter);
+app.use("/api/setting", settingRouter);
 
+app.use("/api/admin/user", [adminCustomerRouter]);
 app.listen(config.host.port, () => {
   console.log("Connected 4000 port.");
 });
