@@ -207,6 +207,7 @@ router.post(
   async (req, res) => {
     try {
       const { email, password } = req.body;
+      console.log(email, password);
       const found = await db.execute("SELECT * FROM user WHERE email=?", [email]).then((result) => result[0][0]);
       if (!found) {
         return res.status(401).json({ message: `아이디 또는 비밀번호를 확인해 주세요.` });
@@ -218,6 +219,8 @@ router.post(
       await db.execute("UPDATE user SET login_time=? WHERE email=?", [new Date(), email]);
       const token = jwt.sign({ idx: found.idx }, config.jwt.secretKey);
       delete found.password;
+      delete found.deleted_time;
+
       return res.status(200).json({
         token: token,
         data: {
