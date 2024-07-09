@@ -97,6 +97,32 @@ router.get(
   }
 );
 
+// 특정 볼링장 있는 고객 정보 검색 기능
+// 전체 회원  검색 (이름/전화번호/메모) --> 개발 해야됨
+router.get(
+  "/find-customers/",
+  isAuth,
+  [body("findData").trim().notEmpty().withMessage("검색 정보를 입력해 주세요."), validate],
+  async (req, res, next) => {
+    try {
+      const { findData } = req.body;
+      const result = {};
+      console.log(findData);
+
+      const findCutomer = await db
+        .execute(`SELECT * from lockers WHERE  user_id = ?  && deleted_at  IS NULL `, [req.authorizedUser])
+        .then((result) => result[0]);
+
+      return res.status(200).json({
+        message: "success",
+        data: {},
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }
+);
+
 router.put(
   "/info/:customerIdx",
   isAuth,

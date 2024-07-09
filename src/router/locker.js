@@ -6,22 +6,6 @@ import { validate } from "../middleware/validate.js";
 import dayjs from "dayjs";
 const router = express.Router();
 
-// router.post(
-//   "/locker/create",
-//   isAuth,
-//   [
-
-//   ],
-//   (req, res, next) => {
-//     const { customerName, customerPhone, lockerType, lockerNumber, startDate, endDate, charge, paid, memo } = req.body;
-
-//     console.log("데이터", customerName, customerPhone, lockerType, lockerNumber, startDate, endDate, charge, paid, memo);
-//     return res.status(200).json({});
-//   }
-// );
-
-// export default router;
-
 // 락카 구분 등록
 router.post(
   "/create",
@@ -196,6 +180,10 @@ router.put(
       .execute(`SELECT * FROM lockers WHERE locker_id=? &&deleted_at IS NULL`, [lockerIdx])
       .then((result) => result[0][0]);
 
+    if (!lockerInfo) {
+      return res.status(404).send("해당 데이터가 없습니다");
+    }
+
     const newData = {
       start_day: startDate === lockerInfo.start_day ? lockerInfo.start_day : startDate,
       end_day: endDate === lockerInfo.end_date ? lockerInfo.end_date : endDate,
@@ -219,16 +207,111 @@ router.put(
   }
 );
 // 락카 수납 수정
+/*
+1. 로그인된 상태 에서 해당 idx 검증 
+2. 락카 idx를 받아서 해당 값을 조회
+3. 락카 수납 정보 확인해서 다르면 변경
+*/
+router.put(
+  "/paid",
+  isAuth,
+  [
+    body("lockerIdx").trim().notEmpty().withMessage("라커 idx를 입력해 주세요."),
+    body("paid").trim().notEmpty().withMessage("수납 여부를 입력해 주세요."),
+    validate,
+  ],
+  async (req, res, next) => {
+    const { lockerIdx, paid } = req.body;
+    const lockerInfo = await db
+      .execute(`SELECT * FROM lockers WHERE locker_id=? &&deleted_at IS NULL`, [lockerIdx])
+      .then((result) => result[0][0]);
+
+    if (!lockerInfo) {
+      return res.status(404).send("해당 데이터가 없습니다");
+    }
+
+    if (lockerInfo.paid !== Number(paid)) {
+      await db.execute(`UPDATE lockers SET paid= ? WHERE locker_id = ?;`, [paid, lockerIdx]);
+      lockerInfo.paid = paid;
+    }
+
+    return res.status(200).json({
+      message: "success",
+      data: { lockerInfo },
+    });
+  }
+);
 
 // 락카 삭제
+/*
+1. 로그인된 상태 에서 해당 idx 검증 
+2. 락카 idx를 받아서 해당 값을 조회
+3. 락카 수납 정보 확인해서 다르면 변경
+*/
+router.delete(
+  "/",
+  isAuth,
+  [
+    body("lockerIdx").trim().notEmpty().withMessage("라커 idx를 입력해 주세요."),
+    body("paid").trim().notEmpty().withMessage("수납 여부를 입력해 주세요."),
+    validate,
+  ],
+  async (req, res, next) => {
+    const { lockerIdx } = req.body;
+    const lockerInfo = await db
+      .execute(`SELECT * FROM lockers WHERE locker_id=? &&deleted_at IS NULL`, [lockerIdx])
+      .then((result) => result[0][0]);
+
+    if (!lockerInfo) {
+      return res.status(404).send("해당 데이터가 없습니다");
+    }
+
+    const deleteLocker = await db.execute(`UPDATE lockers SET deleted_at= ? WHERE locker_id = ?;`, [new Date(), lockerIdx]);
+
+    return res.status(200).json({
+      message: "success",
+      data: { deleteLocker },
+    });
+  }
+);
 
 // 라커 수리중 설정
+router.put(
+  "/locker-status",
+  isAuth,
+  [
+    body("lockerIdx").trim().notEmpty().withMessage("라커 idx를 입력해 주세요."),
+    body("status").trim().notEmpty().withMessage("락카 상태를 입력해 주세요."),
+    validate,
+  ],
+  async (req, res, next) => {
+    const { lockerIdx, status } = req.body;
+    const lockerInfo = await db
+      .execute(`SELECT * FROM lockers WHERE locker_id=? &&deleted_at IS NULL`, [lockerIdx])
+      .then((result) => result[0][0]);
 
-// 전체 회원 목록(라커 이용 정보) & 검색
+    if (!lockerInfo) {
+      return res.status(404).send("해당 데이터가 없습니다");
+    }
 
-// 전체 회원 라커 상세
+    if (lockerInfo.locker_status !== Number(status)) {
+      await db.execute(`UPDATE lockers SET locker_status= ? WHERE locker_id = ?;`, [status, lockerIdx]);
+    }
+
+    return res.status(200).json({
+      message: "success",
+      data: {},
+    });
+  }
+);
 
 // 사용 중인 라커 번호
+/*
+1. 로그인 정보 확인
+2. 락카 구분 idx(lockerType_id)받아서 총 락카 개수 확인 
+3. 락카 갯수 중에 사용 중인 락카는 1 / 비어 있으면 0 을 표시하는 배열 계산
+4. 해당 배열 리턴
+*/
 
 // [엑셀 다운로드용] 라커 전체 목록 & 검색 (항목별 오름차순/내림차순 정렬) - 리스트
 
