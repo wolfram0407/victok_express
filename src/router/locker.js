@@ -305,6 +305,45 @@ router.put(
   }
 );
 
+// 30일 이내 만료 라커 목록
+router.get("/locker-list-remain", isAuth, async (req, res) => {
+  try {
+    const { page } = req.query;
+    const amount = req.query.amount ?? 5;
+    const date30 = dayjs().add(30, "day").format("YYYY-MM-DD");
+    const today = dayjs().format("YYYY-MM-DD");
+    const offset = String((page - 1) * amount);
+    const total = await db
+      .execute(
+        `SELECT COUNT(locker_id) AS total FROM lockers
+     WHERE lockers.user_id = ? AND lockers.deleted_at IS NULL AND end_day BETWEEN ? AND ?`,
+        [req.authorizedUser, today, date30]
+      )
+      .then((result) => result[0][0].total);
+
+    const list = await db
+      .execute(
+        `SELECT charge.charge, charge.period, charge.deposit, charge.period_type, 
+          lockers.locker_id, lockers.customer_id, lockers.locker_number, lockers.lockerType_id, 
+          lockers.start_day, lockers.end_day, lockers.locker_status, customer.name, customer.phone, lockers.paid 
+        FROM lockers
+        JOIN customer ON lockers.customer_id = customer.idx
+        JOIN charge ON lockers.charge_id = charge.idx
+        WHERE lockers.user_id = ?
+        AND lockers.deleted_at IS NULL
+        AND lockers.end_day BETWEEN ? AND ?
+        ORDER BY lockers.updated_at LIMIT ? `,
+        [req.authorizedUser, today, date30, amount]
+      )
+      .then((result) => result[0]);
+
+    return res.status(200).json({ total, list });
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+// LIMIT ? OFFSET ?
 // 사용 중인 라커 번호
 /*
 1. 로그인 정보 확인

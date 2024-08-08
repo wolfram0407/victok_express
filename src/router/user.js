@@ -45,11 +45,13 @@ router.post(
   async (req, res) => {
     try {
       const { phoneNumber } = req.body;
+      console.log(phoneNumber);
       // 중복 여부 확인
       const isMember = await db
-        .execute("SELECT idx FROM user WHERE phone='?'&&deleted_time IS NULL", [phoneNumber])
+        .execute("SELECT idx FROM user WHERE phone= ? &&deleted_time IS NULL", [phoneNumber])
         .then((result) => result[0][0]);
 
+      console.log(isMember);
       if (isMember) {
         return res.status(409).json({ message: "이미 가입된 번호입니다." });
       }
@@ -63,9 +65,6 @@ router.post(
 
       res.status(201).json({
         message: "success",
-        data: {
-          authNumber,
-        },
       });
     } catch (e) {
       console.log(e);
@@ -237,7 +236,6 @@ router.post(
 // 개인 정보 & 시설 정보 불러오기
 router.get("/info", isAuth, async (req, res) => {
   try {
-    console.log(req.authorizedUser);
     const data = await db
       .execute(
         `SELECT 
@@ -248,7 +246,6 @@ router.get("/info", isAuth, async (req, res) => {
         [req.authorizedUser]
       )
       .then((result) => {
-        console.log(result);
         return result[0][0];
       });
     res.status(200).json(data);
